@@ -7,13 +7,13 @@
 # usage: [objtype=amd64|386] [PORT=18091] [CLAUDE=1] scripts/guest-test.sh
 set -e
 TOP=$(cd "$(dirname "$0")/.." && pwd)
-. "$TOP/scripts/nfront-paths.sh"	# TREE, TREE_GCC, GCC_DIR, ... (the distribution's paths.env)
+. "$TOP/scripts/9space-paths.sh"	# TREE, TREE_GCC, GCC_DIR, ... (the distribution's paths.env)
 PLAN9=$(cd "${PLAN9:-$TREE}" && pwd)
 GO=${GO:-$GO_DIR/go/bin/go}
 A=${objtype:-amd64}
 PORT=${PORT:-18091}
 TOKEN=guesttest$$
-CLI_DIR=${CLI_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/nfront/cli}
+CLI_DIR=${CLI_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/9space/cli}
 mkdir -p "$TOP/build"
 T=$(mktemp -d -p "$TOP/build")
 mkdir -p "$T/extra/tests"
