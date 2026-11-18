@@ -69,7 +69,8 @@ the machine:
   already mounted from a disk stay reachable as they are.
 - **Deny list (`-deny file`).** Commands and write/edit paths matching its rules
   are refused (`deny.example`: partitioning, formatting, reaming file servers,
-  writing to `/dev/sd*`, fshalt/reboot, `rm -r /`, `/adm/users`). It is a guard
+  writing to `/dev/sd*`, `rm -r /`, `/adm/users`; fshalt/reboot only commented
+  out: test machines are restarted over MCP). It is a guard
   against mistakes, not a sandbox: rc can spell any command so that no pattern
   sees it (`d='#'^S`, eval, a script). The agent is told not to work around a
   refusal. The tool `reload_deny` reads the file again after the user changed

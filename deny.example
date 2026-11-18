@@ -17,8 +17,9 @@
 [>|]\s*\S*/dev/sd
 \bdd\b.*\s-of\s+\S*(/dev/sd|\#S)
 \#S
-# shutting the machine down
-\b(fshalt|reboot)\b
+# shutting the machine down: allowed (test machines are restarted over MCP);
+# uncomment to refuse it
+#\b(fshalt|reboot)\b
 # rm -r of / or of everything in it
 \brm\s+(-[a-zA-Z]*\s+)*(/|/\*)(\s|;|$)
 

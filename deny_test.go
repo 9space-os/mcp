@@ -22,8 +22,6 @@ func TestDenyExample(t *testing.T) {
 		"cat x >>/dev/sdC0/ctl",
 		"dd -if /dev/zero -of /dev/sdE0/data",
 		"bind -a '#S' /dev",
-		"fshalt -r",
-		"echo reboot >/dev/reboot",
 		"rm -rf /",
 		"rm -r /*",
 		"ls\nrm -rf / ",
@@ -37,6 +35,10 @@ func TestDenyExample(t *testing.T) {
 		"rm -r ./build",
 		"walk -f /sys/src | grep mkfs.c",
 		"dd -if /dev/sdE0/data -of /tmp/mbr -count 1",
+		// a test machine is restarted over MCP (the user's choice): the rule
+		// is in deny.example, commented out
+		"fshalt -r",
+		"echo reboot >'#c/reboot'",
 	}
 	for _, c := range refused {
 		if denied(rules, c, false) == nil {
