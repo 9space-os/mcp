@@ -144,6 +144,23 @@ func init() {
 			}),
 			Run: runRc,
 		},
+		{
+			Name: "reload_deny",
+			Description: "Read the server's deny list (its -deny file) again, after the user changed it, and say how " +
+				"many rules it has now. The tools cannot change the file themselves. On an error (the file " +
+				"missing, a bad rule) the rules stay as they were.",
+			Schema: object(nil, map[string]any{}),
+			Run: func(ctx context.Context, cfg *Config, ss *Session, args json.RawMessage) (string, error) {
+				f := cfg.Deny.file()
+				if f == "" {
+					return "", errors.New("the server runs without a deny list (-deny)")
+				}
+				if err := cfg.Deny.load(f); err != nil {
+					return "", fmt.Errorf("%v: the rules stay as they were", err)
+				}
+				return fmt.Sprintf("%s read again: %d rules", f, len(cfg.Deny.rules())), nil
+			},
+		},
 	}
 }
 

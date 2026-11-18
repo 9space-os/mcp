@@ -14,9 +14,51 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 )
+
+// denyList holds the rules of the -deny file, read again by reload_deny (the
+// user changed the file): requests run while it is read take the old ones or
+// the new ones, not a mix. The file itself is kept from the tools (write,
+// edit; an rc command that names it): an agent cannot change its own rules
+// and reload them.
+type denyList struct {
+	mu   sync.RWMutex
+	path string
+	r    []denyRule
+}
+
+// load reads file's rules; on an error the rules stay as they were
+func (d *denyList) load(file string) error {
+	rules, err := loadDeny(file)
+	if err != nil {
+		return err
+	}
+	abs, err := filepath.Abs(file)
+	if err != nil {
+		abs = file
+	}
+	d.mu.Lock()
+	d.path, d.r = filepath.Clean(abs), rules
+	d.mu.Unlock()
+	return nil
+}
+
+func (d *denyList) rules() []denyRule {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.r
+}
+
+// the deny file's path, "" without one
+func (d *denyList) file() string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.path
+}
 
 type denyRule struct {
 	re   *regexp.Regexp
@@ -86,7 +128,10 @@ func writable(cfg *Config, p string) error {
 			return fmt.Errorf("%s is a disk device: the server keeps disks from its tools (it runs without -disks)", p)
 		}
 	}
-	if r := denied(cfg.Deny, p, true); r != nil {
+	if f := cfg.Deny.file(); f != "" && p == f {
+		return fmt.Errorf("%s is the server's deny list: the user changes it, then reload_deny", p)
+	}
+	if r := denied(cfg.Deny.rules(), p, true); r != nil {
 		return r
 	}
 	return nil

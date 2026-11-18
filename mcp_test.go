@@ -135,7 +135,7 @@ func TestProtocol(t *testing.T) {
 	for _, tl := range m["result"].(map[string]any)["tools"].([]any) {
 		names = append(names, tl.(map[string]any)["name"].(string))
 	}
-	if strings.Join(names, " ") != "read write edit glob grep rc" {
+	if strings.Join(names, " ") != "read write edit glob grep rc reload_deny" {
 		t.Fatalf("tools %v", names)
 	}
 	if m := c.rpc("nosuch", nil); m["error"] == nil {

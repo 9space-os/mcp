@@ -29,7 +29,7 @@ type Config struct {
 	Token     string
 	Origins   []string
 	Verbose   bool
-	Deny      []denyRule
+	Deny      denyList // the -deny file's rules (reload_deny reads it again)
 	Guard     string   // rc lines run before each command (diskGuard)
 	DiskPaths []string // what write and edit must not touch
 }
@@ -86,11 +86,9 @@ func main() {
 		}
 	}
 	if *deny != "" {
-		rules, err := loadDeny(*deny)
-		if err != nil {
+		if err := cfg.Deny.load(*deny); err != nil {
 			log.Fatal(err)
 		}
-		cfg.Deny = rules
 	}
 	if !*disks {
 		guard, paths, err := diskGuard()
@@ -138,7 +136,7 @@ func main() {
 		scheme = "https"
 	}
 	log.Printf("serving %s://%s/mcp, rc %s in %s, %d deny rules, disks %s", scheme, ln.Addr(), cfg.Shell, cfg.Dir,
-		len(cfg.Deny), map[bool]string{true: "guarded", false: "open"}[cfg.Guard != ""])
+		len(cfg.Deny.rules()), map[bool]string{true: "guarded", false: "open"}[cfg.Guard != ""])
 	if *tlscert != "" {
 		err = hs.ServeTLS(ln, *tlscert, *tlskey)
 	} else {

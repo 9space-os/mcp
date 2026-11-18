@@ -61,7 +61,7 @@ func TestDenyExample(t *testing.T) {
 
 func TestDenyCalls(t *testing.T) {
 	c, dir := newTestServer(t)
-	c.cfg.Deny = mustDeny(t, "\\brm\\b\npath:secret")
+	mustDeny(t, &c.cfg.Deny, "\\brm\\b\npath:secret")
 	c.cfg.DiskPaths = []string{dir + "/dev/sdE0"}
 	c.init()
 	c.fails("rc", map[string]any{"command": "echo a; rm x"}, "deny list (rule 1")
@@ -92,14 +92,37 @@ func TestTokenize(t *testing.T) {
 	}
 }
 
-func mustDeny(t *testing.T, rules string) []denyRule {
+// a deny file of rules, loaded into d; its path
+func mustDeny(t *testing.T, d *denyList, rules string) string {
 	f := t.TempDir() + "/deny"
 	if err := os.WriteFile(f, []byte(rules), 0644); err != nil {
 		t.Fatal(err)
 	}
-	r, err := loadDeny(f)
-	if err != nil {
+	if err := d.load(f); err != nil {
 		t.Fatal(err)
 	}
-	return r
+	return f
+}
+
+// the user changes the deny file, reload_deny takes it; the tools cannot
+// change it themselves, a bad file leaves the rules as they were
+func TestDenyReload(t *testing.T) {
+	c, _ := newTestServer(t)
+	f := mustDeny(t, &c.cfg.Deny, "\\bzzzz\\b\n")
+	c.init()
+	c.fails("rc", map[string]any{"command": "echo zzzz"}, "deny list (rule 1")
+	c.fails("write", map[string]any{"path": f, "content": "x"}, "the server's deny list")
+	c.fails("rc", map[string]any{"command": "echo >" + f}, "names the server's deny list")
+	if err := os.WriteFile(f, []byte("# none\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	c.ok("rc", map[string]any{"command": "echo before"})
+	c.fails("rc", map[string]any{"command": "echo zzzz"}, "deny list (rule 1")
+	c.ok("reload_deny", map[string]any{})
+	c.ok("rc", map[string]any{"command": "echo zzzz"})
+	if err := os.WriteFile(f, []byte("(\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	c.fails("reload_deny", map[string]any{}, "stay as they were")
+	c.ok("rc", map[string]any{"command": "echo zzzz"})
 }

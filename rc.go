@@ -26,8 +26,11 @@ func runRc(ctx context.Context, cfg *Config, ss *Session, args json.RawMessage) 
 	if strings.TrimSpace(a.Command) == "" {
 		return "", errors.New("command is empty")
 	}
-	if r := denied(cfg.Deny, a.Command, false); r != nil {
+	if r := denied(cfg.Deny.rules(), a.Command, false); r != nil {
 		return "", r
+	}
+	if f := cfg.Deny.file(); f != "" && strings.Contains(a.Command, f) {
+		return "", fmt.Errorf("refused: the command names the server's deny list (%s); the user changes it, then reload_deny", f)
 	}
 	dir := cfg.Dir
 	if a.Dir != "" {

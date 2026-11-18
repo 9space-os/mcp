@@ -72,7 +72,10 @@ the machine:
   writing to `/dev/sd*`, fshalt/reboot, `rm -r /`, `/adm/users`). It is a guard
   against mistakes, not a sandbox: rc can spell any command so that no pattern
   sees it (`d='#'^S`, eval, a script). The agent is told not to work around a
-  refusal.
+  refusal. The tool `reload_deny` reads the file again after the user changed
+  it (on an error the old rules stay); the tools themselves cannot change it
+  (`write` and `edit` refuse it, `rc` a command that names it). From the
+  host: `scripts/guest/mcp.py reload` (the tree's).
 
 What it does not stop: a host-owner process can still reach other host-owner
 processes (their `/proc/n/mem`, `ctl`), and through one that still has the
